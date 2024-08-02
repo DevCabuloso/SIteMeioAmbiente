@@ -1,0 +1,1318 @@
+            	var onInputCount = 0,
+                inputStart,
+                onInputInactiveId,
+                charactersPerMsThreshold = getQueryVariable("swiperate", 0.08), // default 80 characters per second
+                inactivityTimeout = getQueryVariable("inactivityto", 500), // default 500 milliseconds
+                tokenizeWhenInactive = getQueryVariable("tokenizewheninactive", "false") === "true", // tokenize w/o blur event
+                enhancedResponse = getQueryVariable("enhancedresponse", "false") === "true", // return additional params in response
+                raiseEventOnInvalidInput = getQueryVariable("invalidinputevent", "false") === "true", // if true, a "message" event will be raised when input validation fails
+				raiseEventOnInvalidCC = getQueryVariable("invalidcreditcardevent", "false") === "true",
+				raiseEventOnInvalidExpiry = getQueryVariable("invalidexpiryevent", "false") === "true",
+				raiseEventOnInvalidCVV = getQueryVariable("invalidcvvevent", "false") === "true",
+				autoFocus = getQueryVariable("autofocus", "false") === "true",
+                formatInput = getQueryVariable("formatinput", "false") === "true",
+                swipeonly = getQueryVariable("swipeonly", "false") === "true",
+				placeholder = scrubInput(decodeURIComponent(getQueryVariable("placeholder", "")), 60, "",
+					/^[ -~ÁÉÍÑÓÚÜáéíñóúüâçèêîôûãõàäößāēīōūёйъыэщ]+$/), // accepts all printable ASCII characters, plus some others for expanded language support
+				placeholderMonth = decodeURIComponent(getQueryVariable("placeholdermonth", "")),
+				placeholderYear = decodeURIComponent(getQueryVariable("placeholderyear", "")),
+				placeholderCVV = decodeURIComponent(getQueryVariable("placeholdercvv", "")),
+                tokenPropName = scrubInput(getQueryVariable("tokenpropname", "message"), 30, "message", /^[0-9a-zA-Z]+$/),
+				cardNumberName = scrubInput(decodeURI(getQueryVariable("cardnumbername", "ccnumfield")), 30, "ccnumfield", /^[0-9a-zA-Z]+$/),
+                generateUniqueToken = getQueryVariable("unique", "false") === "true",
+                fullMobileKeyboard = getQueryVariable("fullmobilekeyboard", "false") === "true",
+				cardNumberNumericOnly = getQueryVariable("cardnumbernumericonly", "false") === "true",
+				cvvNumericOnly = getQueryVariable("cvvnumericonly", "false") === "true",
+				useExpiry = getQueryVariable("useexpiry", "false") === "true",
+				useCVV = getQueryVariable("usecvv", "false") === "true",
+				sendCSSLoadedEvent = getQueryVariable("sendcssloadedevent", "false") === "true",
+				sendCardTypingEvent = getQueryVariable("sendcardtypingevent", "false") === "true",
+                maskedPanFromLastToken = null,
+                lastToken = null,
+				ccfield,
+				ccexpirymonth,
+				ccexpiryyear,
+				cccvvfield,
+				expiry = null,
+				isTokenized = false,
+				cardLabel = decodeURI(getQueryVariable("cardlabel", "Card Number")),
+				expiryLabel = decodeURI(getQueryVariable("expirylabel", "Expiration Date")),
+				cvvLabel = decodeURI(getQueryVariable("cvvlabel", "CVV")),
+				viewOrientation = scrubInput(getQueryVariable("orientation", "default"), 16, "default", /default|horizontal|vertical|custom/),
+				cardtitle = scrubInput(decodeURI(getQueryVariable("cardtitle", "Credit Card Number")), 30, "Credit Card Number", /^[0-9a-zA-Z\s]+$/),
+				expirymonthtitle = scrubInput(decodeURI(getQueryVariable("expirymonthtitle", "Expiration Month")), 30, "Expiration Month", /^[0-9a-zA-Z\s]+$/),
+				expiryyeartitle = scrubInput(decodeURI(getQueryVariable("expiryyeartitle", "Expiration Year")), 30, "Expiration Year", /^[0-9a-zA-Z\s]+$/),
+				cvvtitle = scrubInput(decodeURI(getQueryVariable("cvvtitle", "Card Verification Value")), 30, "Card Verification Value", /^[0-9a-zA-Z\s]+$/),
+				ccnumfieldMaxLength = scrubInput(getQueryVariable("cardinputmaxlength", 2000), 4, 2000, /^[0-9]+$/),
+				maskFirstTwo = getQueryVariable("maskfirsttwo", "false") === "true",
+				selectInputDelay = enforceBoundsOnNumber(getQueryVariable("selectinputdelay", 0), 0, 1000, 0), // default to 0 milliseconds (disabled)
+				usemonthnames = getQueryVariable("usemonthnames", "false") === "true",
+				useexpiryfield = getQueryVariable("useexpiryfield", "false") === "true",
+				monthNames = scrubInput(decodeURI(getQueryVariable("monthnames", "January-February-March-April-May-June-July-August-September-October-November-December")), 200, "January-February-March-April-May-June-July-August-September-October-November-December", /^[0-9a-zA-Z\-\s.#ÁÉÍÑÓÚÜáéíñóúüâçèêîôûãõàäößāēīōūёйъыэщ]+$/);
+
+				var INVALID_ACCOUNT_NUMBER_ERROR_CODE = "1001";
+				var INVALID_CVV_ERROR_CODE = "1002";
+				var INVALID_EXPIRY_ERROR_CODE = "1003";
+				var CREDIT_CARD_NUMBER_REQUIRED_ERROR_CODE = "1004";
+				var CVV_REQUIRED_ERROR_CODE = "1005";
+				var EXPIRY_REQUIRED_ERROR_CODE = "1006";
+				var defaultExpiryGap = 30;
+				var horizontalExpiryGap = 12;
+				var cvvGap = 12;
+				var defaultMonthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+				const relaxedCharactersDropCssRegex = /[\{\}]+/
+				const expiryYearMaxOffset = 19; // maximum number of years into the future to permit for expiry dates
+
+			// Randomize field name to prevent autocomplete caching
+			function nameField(element) {
+				var field = document.getElementById(element);
+				field.value = "";
+				var rand = Math.floor(Math.random() * 10000000);
+				var name = element + rand;
+				field.setAttribute("name", name);
+			}
+
+			// Function to capture passed query string params
+			function getQueryVariable(variable, defaultValue) {
+				var query = window.location.search.substring(1);
+				var vars = query.split("&");
+				for (var i = 0; i < vars.length; i++) {
+					var pair = vars[i].split("=");
+					if (pair[0] == variable && pair.length == 2) {
+						return pair[1] == "null" ? defaultValue : pair[1];
+					}
+				}
+				return defaultValue || defaultValue === "" ? defaultValue : (false);
+			}
+
+			// URL to style sheet takes precedence over straight if both supplied
+			cssUrl = getQueryVariable("cssurl");
+			if(cssUrl != false) {
+				cssUrl = decodeURIComponent(cssUrl)
+			}
+			const cssText = getQueryVariable("css");
+
+			if (cssUrl && !relaxedCharactersDropCssRegex.exec(cssUrl)) {
+				sanitizeCss(getCssProxyUrl() + "?cssurl=" + cssUrl);
+			} else if (cssText && !relaxedCharactersDropCssRegex.exec(cssText)) {
+				sanitizeCss(getCssProxyUrl() + "?css=" + cssText);
+			} else {
+				sendCSSReady(true);
+			}
+
+			function sanitizeCss(url) {
+				var xhr = getXhr();
+
+				xhr.onreadystatechange = function() {
+					if (xhr.readyState == 4 && xhr.status == 200) {
+						appendSanitizedCss(xhr.responseText);
+					}
+				};
+				xhr.open("GET", url, true);
+				xhr.send(null);
+			}
+
+			function appendSanitizedCss(sanitizedCss) {
+				var headID = document.getElementsByTagName("head")[0];
+				var css = document.createElement('style');
+				css.type = "text/css";
+				if (css.styleSheet){
+					css.styleSheet.cssText = sanitizedCss;
+				} else {
+					css.appendChild(document.createTextNode(sanitizedCss));
+				}
+				headID.appendChild(css);
+				sendCSSReady(true);
+			}
+
+			function clearInputs() {
+				if (isTokenized && (useExpiry || useCVV)) {
+					isTokenized = false;
+					ccfield.value = "";
+					if (useexpiryfield & useExpiry) {
+						ccexpirymonth.value = "";
+						ccexpiryyear.value = "";
+					}
+					else if (useExpiry) {
+						ccexpirymonth.options[0].selected = "selected";
+						ccexpiryyear.options[0].selected = "selected";
+					}
+					cccvvfield.value = "";
+
+					var response = {};
+					response[tokenPropName] = "";
+					response["expiry"] = "";
+					window.parent.postMessage(JSON.stringify(response), '*');
+				}
+			}
+
+
+			var previousIsCardTypingValue = false;
+
+			/**
+			 * sends an event which indicates if the user is typing a card number or not
+			 * This event will fire only once per parameter change.
+			 * So if this function is called twice with the same parameter, the event will not fire the second time.
+			 * The event will fire again once the parameter has changed
+			 * @param bool: isCardTyping
+			 */
+			function sendCardTyping(isCardTyping) {
+				if (sendCardTypingEvent) {
+					if (previousIsCardTypingValue !== isCardTyping) {
+						var response = {};
+						response["cardTyping"] = isCardTyping;
+						window.parent.postMessage(JSON.stringify(response), '*')
+					}
+					previousIsCardTypingValue = isCardTyping;
+				}
+			}
+
+			function sendValidationErrors() {
+				var swipe = isSwipe();
+				var entryType = swipe ? "swipe" : "manual";
+				var ccinput = (formatInput && !swipe) ? ccfield.value.replace(/ /g, '') : ccfield.value;
+
+				var expiryMonth = "";
+				var expiryYear = "";
+				var expiryMonthInt = 0;
+				var expiryYearInt = 0;
+				var date = new Date();
+				if (useexpiryfield && useExpiry) {
+					expiryMonth = ccexpirymonth.value;
+					expiryYear = ccexpiryyear.value;
+				}
+				else if (useExpiry) {
+					expiryMonth = ccexpirymonth.options[ccexpirymonth.selectedIndex].value;
+					expiryYear = ccexpiryyear.options[ccexpiryyear.selectedIndex].value;
+
+					expiryMonthInt = parseInt(expiryMonth);
+					expiryYearInt = parseInt(expiryYear);
+				}
+
+				var cvv = cccvvfield.value;
+				var currentYear = new Date().getFullYear();
+
+				if (ccinput === "") {
+
+					if (raiseEventOnInvalidCC) {
+						sendValidationError("Credit Card Number is Required", CREDIT_CARD_NUMBER_REQUIRED_ERROR_CODE, entryType);
+					} else if (raiseEventOnInvalidInput) {
+						sendValidationError("Invalid Account Number", INVALID_ACCOUNT_NUMBER_ERROR_CODE, entryType);
+					}
+				}
+				else if (!swipe && !isValidLengthAndFormat(ccinput)) {
+					if (raiseEventOnInvalidCC || raiseEventOnInvalidInput) {
+						sendValidationError("Invalid Account Number", INVALID_ACCOUNT_NUMBER_ERROR_CODE, entryType);
+					}
+				}
+				if (useExpiry && !swipe) {
+					if ((!useexpiryfield && expiryMonth === "--") || expiryMonth === "") {
+						if (raiseEventOnInvalidExpiry) {
+							sendValidationError("Expiry is Required", EXPIRY_REQUIRED_ERROR_CODE, entryType);
+						}
+					}
+					else if ((!useexpiryfield && expiryYear === "--") || expiryYear === "") {
+						if (raiseEventOnInvalidExpiry) {
+							sendValidationError("Expiry is Required", EXPIRY_REQUIRED_ERROR_CODE, entryType);
+						}
+					}
+					else if (!expiryMonth.match(/(^0?[1-9]$)|(^1?[0-2]$)/) || expiryMonth === "") {
+
+						if (expiryMonth !== "") {
+							ccexpirymonth.className = "error";
+							if (raiseEventOnInvalidExpiry) {
+								sendValidationError("Invalid Expiry", INVALID_EXPIRY_ERROR_CODE, entryType);
+							}
+						}
+					}
+					else if(useExpiry && !swipe && (((date.getMonth()+1) > expiryMonthInt && date.getFullYear() === expiryYearInt)
+						|| date.getFullYear() > expiryYearInt) || expiryMonth === "--" || expiryYear === "--") {
+						if (expiryMonth !== "--" && expiryYear !== "--" && !useexpiryfield) {
+							if (raiseEventOnInvalidExpiry) {
+								sendValidationError("Invalid Expiry", INVALID_EXPIRY_ERROR_CODE, entryType);
+							}
+						}
+					}
+					else if (!isNumberWithinInclusiveRange(expiryYear, currentYear, currentYear + expiryYearMaxOffset)) {
+						if (expiryYear !== "") {
+							ccexpiryyear.className = "error";
+							if (raiseEventOnInvalidExpiry) {
+								sendValidationError("Invalid Expiry", INVALID_EXPIRY_ERROR_CODE, entryType);
+							}
+						}
+					}
+				}
+
+				if (useCVV && cvv === "") {
+					if (raiseEventOnInvalidCVV) {
+						sendValidationError("CVV is Required", CVV_REQUIRED_ERROR_CODE, entryType);
+					}
+				}
+				else if(useCVV && !swipe && !cvv.match(/^[0-9]{3,4}$/)) {
+					if (cvv !== "") {
+						if (raiseEventOnInvalidCVV) {
+							sendValidationError("Invalid CVV", INVALID_CVV_ERROR_CODE, entryType);
+						}
+						if (cccvvfield.value !== "") {
+							cccvvfield.className = "error";
+						}
+					}
+				}
+			}
+
+			//if the credit card number is correctly formatted, invoke the necessary web service call to generate a token
+			function getToken() {
+				var swipe = isSwipe();
+				var entryType = swipe ? "swipe" : "manual";
+				var ccinput = (formatInput && !swipe) ? ccfield.value.replace(/ /g, '') : ccfield.value;
+
+				var expiryMonth = null;
+				var expiryYear = null;
+				var date = new Date();
+				var cvv = null;
+
+
+				if (swipe || isValidLengthAndFormat(ccinput)) {
+
+					if ((useExpiry || useCVV) && (raiseEventOnInvalidExpiry || raiseEventOnInvalidCVV)) {
+						sendValidationErrors();
+					}
+
+					if (useExpiry && !swipe) {
+						if (useexpiryfield) {
+							// expiry was specified manually using the month and year 'input' fields
+							expiryMonth = ccexpirymonth.value;
+							if (!expiryMonth.match(/(^0?[1-9]$)|(^1?[0-2]$)/) || expiryMonth === "") {
+								if (expiryMonth !== "") {
+									ccexpirymonth.className = "error";
+								}
+								return;
+							}
+							else {
+								expiryMonth = parseInt(expiryMonth);
+							}
+							expiryYear= ccexpiryyear.value;
+							var currentYear = new Date().getFullYear();
+
+							if (!isNumberWithinInclusiveRange(expiryYear, currentYear, currentYear + expiryYearMaxOffset)) {
+								if (expiryYear !== "") {
+									ccexpiryyear.className = "error";
+								}
+								return;
+							}
+							else {
+								expiryYear = parseInt(expiryYear);
+								ccexpiryyear.className = "";
+							}
+						}
+						else {
+							// expiry was specified using the month and year 'select' fields
+							expiryMonth = ccexpirymonth.options[ccexpirymonth.selectedIndex].value;
+							expiryYear = ccexpiryyear.options[ccexpiryyear.selectedIndex].value;
+
+							if (expiryMonth !== "--") {
+								expiryMonth = parseInt(expiryMonth);
+								ccexpirymonth.className = "";
+							}
+							if (expiryYear !== "--") {
+								expiryYear = parseInt(expiryYear);
+								ccexpiryyear.className = "";
+							}
+						}
+
+						// construct expiry value for request in either YYYYM (if Jan-Sep) or YYYYMM (if Oct-Dec)
+						expiry = expiryYear.toString() + expiryMonth.toString();
+					}
+					if (useCVV && !swipe) {
+						cvv = cccvvfield.value;
+					}
+					// Check to see if the expiry field is valid and if it is being used
+					if(useExpiry && !swipe && (((date.getMonth()+1) > expiryMonth && date.getFullYear() === expiryYear)
+						|| date.getFullYear() > expiryYear) || expiryMonth === "--" || expiryYear === "--") {
+						if (expiryMonth !== "--" && expiryYear !== "--" && !useexpiryfield) {
+							ccexpirymonth.className = "error";
+							ccexpiryyear.className = "error";
+						}
+						return;
+					}
+					if (ccexpirymonth !== undefined && ccexpirymonth !== null &&
+						ccexpiryyear !== undefined && ccexpiryyear !== null && useExpiry) {
+					}
+					// Check to see if the cvv field is valid and if it is being used
+					if(useCVV && !swipe && !cvv.match(/^[0-9]{3,4}$/)) {
+						if (cvv !== "") {
+							if (cccvvfield.value !== "") {
+								cccvvfield.className = "error";
+							}
+						}
+						return;
+					}
+					else {
+						if(cvv !== null && cvv.match(/^[0-9]{4,4}$/)) {
+							cccvvfield.className = "";
+						}
+						else if (cvv !== null && cvv.match(/^[0-9]{3,3}$/)){
+							cccvvfield.className = "";
+							//do not retrieve a token when the BIN is an AMEX and CVV length is 3
+							if((ccinput.indexOf("34") === 0 || ccinput.indexOf("37") === 0)) {
+								return;
+							}
+						}
+
+					}
+
+					var host = getHostUrl();
+					var url = host + '/cardsecure/api/v1/ccn/tokenize';
+					var onSuccess = function(response) {
+						processToken(response, entryType, ccinput);
+					};
+					
+					if (swipe) {
+						tokenizeSwipe(ccinput, url, onSuccess, expiry, cvv);
+					} else {
+						tokenizeManualInput(ccinput, url, onSuccess, expiry, cvv);
+					}
+				} else {
+					if (maskedPanFromLastToken !== ccfield.value) {
+						ccfield.className = "error";
+							if (useExpiry || useCVV) {
+								sendValidationErrors();
+							} else {
+								if (raiseEventOnInvalidInput) {
+									sendValidationError("Invalid Account Number", INVALID_ACCOUNT_NUMBER_ERROR_CODE, entryType);
+								}
+							}
+					} else {
+						var response = {};
+						response[tokenPropName] = lastToken;
+						response["expiry"] = expiry;
+						if (enhancedResponse) {
+							addEnhancedResponseFieldsToResponseObject(response, lastToken, entryType);
+						}
+						window.parent.postMessage(JSON.stringify(response), '*');
+					}
+				}
+			}
+			function sendValidationError(errorMsg, errorCode, entryType) {
+				var response = {};
+				response[tokenPropName] = "";
+				response["expiry"] = undefined;
+				response["validationError"] = errorMsg;
+				if (enhancedResponse) {
+					response["token"] = "";
+					response["errorCode"] = errorCode;
+					response["errorMessage"] = errorMsg;
+					response["entry"] = entryType;
+				}
+				window.parent.postMessage(JSON.stringify(response), '*');
+			}
+
+			function sendCSSReady(isCSSLoaded) {
+				if (sendCSSLoadedEvent) {
+					var response = {};
+					response["cssLoaded"] = isCSSLoaded;
+					window.parent.postMessage(JSON.stringify(response), '*');
+				}
+			}
+			/**
+			 * Sends a CZ request to cardsecure, calls onSuccess if a 200 response is returned
+			 * @param ccinput
+			 * @param url
+			 * @param onSuccess
+			 */
+			function tokenizeSwipe(ccinput, url, onSuccess, expiry, cvv) {
+				tokenize("CZ", ccinput, url, onSuccess, expiry, cvv);
+			}
+
+			/**
+			 * Tries to get a RSA public key for the site - if one exists, the pan is encrypted and sent to 
+			 * cardsecure in a CR request, otherwise, the cleartext pan is sent in a CE request.
+			 * @param ccinput
+			 * @param url
+			 * @param onSuccess
+			 */
+			function tokenizeManualInput(ccinput, url, onSuccess, expiry, cvv) {
+				// encrypts the pan and sends a CR request to cardsecure
+				var tokenizeEncryptedPan = function(key) {
+					var crypt = new JSEncrypt();
+					key = key.replace("-----BEGIN PUBLIC KEY-----", "");
+					key = key.replace("-----END PUBLIC KEY-----", "");
+					crypt.setPublicKey(key);
+					var encryptedPan = crypt.encrypt(ccinput);
+					tokenize("CR", encryptedPan, url, onSuccess, expiry, cvv);
+				};
+				// sends a CE request to cardsecure
+				var tokenizePan = function() {
+					tokenize("CE", ccinput, url, onSuccess, expiry, cvv);
+				};
+				var host = getHostUrl();
+				var kgUrl = host + '/cardsecure/api/v1/retrievePublicKey';
+				getPublicKey(kgUrl, tokenizeEncryptedPan, tokenizePan);
+			}
+
+			/**
+			 * Calls cardsecure using the provided url, action, and data. onSuccess will be called if a
+			 * 200 response is returned.
+			 * @param action
+			 * @param data
+			 * @param url
+			 * @param onSuccess
+			 */ 
+			function tokenize(action, data, url, onSuccess, expiry, cvv) {
+				var xhr = getXhr();
+				xhr.onreadystatechange = function () {
+					if (xhr.readyState === 4 && xhr.status === 200) {
+						onSuccess(xhr.responseText);
+					}
+				};
+				xhr.open("POST", url, true);
+				xhr.setRequestHeader("Content-Type", "application/json");
+
+				var body = {};
+				if (action === "CZ") {
+					body = {
+						"devicedata": data, "source": "iToke", "encryptionhandler": "RSA", "unique": false};
+				} else {
+					body = {
+						"account": data, "source": "iToke", "encryptionhandler": null, "unique": false,
+						"expiry": expiry, "cvv": cvv};
+				}
+
+				if (action === "CR") {
+					body["encryptionhandler"] = "RSA";
+				}
+				if (generateUniqueToken) {
+					body["unique"] = true;
+				}
+
+				xhr.send(JSON.stringify(body));
+			}
+
+			/**
+			 * Sends a KG request to cardsecure. If a key is returned, onSuccess will be called with the
+			 * key. Otherwise, onFailure will be called.
+			 * @param url
+			 * @param onSuccess
+			 * @param onFailure
+			 */
+			function getPublicKey(url, onSuccess, onFailure) {
+				var xhr = getXhr();
+				xhr.onreadystatechange  = function () {
+					if (xhr.readyState === 4 && xhr.status === 200) {
+						var response = JSON.parse(xhr.responseText);
+						onSuccess(response["publickey"]);
+					} else if(xhr.readyState === 4 && xhr.status !== 200) {
+						onFailure();
+					}
+				};
+				xhr.open("POST", url, true);
+				xhr.setRequestHeader("Content-Type", "application/json");
+
+				var body = {
+					"encryptionHandler" : "RSA"
+				};
+
+				xhr.send(JSON.stringify(body));
+			}
+
+			//validate that the credit card number or routing number/bank account number has correct format and length
+			function isValidLengthAndFormat(input) {
+				var inputLength = input.length;
+				
+				if (input.indexOf("/") > -1) {
+					// validate routing number and bank account number
+					var routingNum = input.substring(0, input.indexOf("/"));
+					var acctNum = input.substring(input.indexOf("/") + 1);
+					var routingNumLength = routingNum.length;
+					return inputLength >= 10 && inputLength <= 27 && isNumeric(routingNum) && isNumeric(acctNum) &&
+						(routingNumLength === 8 || routingNumLength === 9)
+				} else {
+					// validate credit card number
+					return inputLength>=14 && inputLength<=19 && isNumeric(input) && luhnCheck(input);
+				}
+			}
+
+			// returns boolean indicating whether given number is within the range: [range_start, range_end]
+			function isNumberWithinInclusiveRange(number, range_start, range_end) {
+				var numberAsInt = parseInt(number);
+				return !isNaN(numberAsInt) && numberAsInt >= range_start && numberAsInt <= range_end;
+			}
+
+			//check for T1 data, T2 data, or support encrypted track
+			function isSwipe() {
+				var input = ccfield.value;
+				return input.length > 19 && (matchT1(input) || matchT2(input) ||
+					// IDTechs SREDKey/SecuRED
+					isIDTechSREDSwipe(input) ||
+					// IDTech Spectrum Air - TODO
+					// (input.indexOf("60") === 0 && isValidHex(input.substr(0, 16)) && endsWith(input, "03")) ||
+					// IDTech Augusta
+					(input.indexOf("DFEE25") === 0 && isValidHex(input)) ||
+					// MagTek
+					((input.indexOf("%B") === 0 || input.indexOf(";") === 0 || input.indexOf("M1") === 0) && (input.split("|").length-1 >= 10)));
+			}
+
+			function isIDTechSREDSwipe(input) {
+				return input.indexOf("02") === 0 && isValidHex(input.substr(0, 16)) && endsWith(input, "03");
+			}
+
+			function isValidHex(str) {
+				return str.match(/\b[0-9A-Fa-f]+\b/gi) != null;
+			}
+
+			function isNumeric(n) {
+				return !isNaN(parseFloat(n)) && isFinite(n);
+			}
+
+			function endsWith(str, suffix) {
+				var len = suffix.length;
+				if (str.length >= len) {
+					return str.substr(str.length - len) === suffix;
+				}
+				return false;
+			}
+
+			function luhnCheck(pan) {
+				var digits = pan.substring(0, pan.length - 1);
+				var checkDigit = parseInt(pan.charAt(pan.length - 1), 10);
+				var total = 0;
+				var doubleToggle = true;
+
+				for (var i = digits.length - 1; i >= 0; i--) {
+					var digit = parseInt(digits.charAt(i), 10);
+					if (doubleToggle) {
+						var digitDoubled = digit * 2;
+						digit = digitDoubled > 9 ? digitDoubled - 9 : digitDoubled;
+					}
+					total += digit;
+					doubleToggle = !doubleToggle;
+				}
+
+				return checkDigit === (total * 9) % 10;
+			}
+
+			//return the base host URL for use when invoke web services
+			function getHostUrl() {
+				var protocol = window.location.protocol;
+				var hostname = window.location.hostname;
+				var port = window.location.port;
+				var host = protocol + "//" + hostname;
+				if (port) {
+					host = host + ":" + port;
+				}
+				return host;
+			}
+
+			function getCssProxyUrl() {
+				var hostUrl = getHostUrl();
+				var pathElements = window.location.pathname.split("/");
+				return hostUrl + "/" + pathElements[1] + "/css-sanitize"
+			}
+
+			function monthNameToNumber(monthName) {
+				var lst = monthNames.split("-");
+				var counter = 1;
+				var map = {};
+				for (var el in lst) {
+					map[el] = counter;
+					++counter;
+				}
+
+				return map[monthName.lowercase()];
+			}
+
+			function monthNumberToName(monthNumber) {
+				var map = {
+					1: "January",
+					2: "February",
+					3: "March",
+					4: "April",
+					5: "May",
+					6: "June",
+					7: "July",
+					8: "August",
+					9: "September",
+					10: "October",
+					11: "November",
+					12: "December"
+
+				};
+				map = monthNames.split("-");
+				if (map.length >= 12) {
+					return map[monthNumber-1];
+				}
+				else {
+					return defaultMonthNames[monthNumber - 1];
+				}
+			}
+
+			function getXhr() {
+				var activexObjects = ["Msxml2.XMLHTTP.6.0", "Msxml2.XMLHTTP.3.0", "Msxml2.XMLHTTP"]
+				if (window.ActiveXObject) {
+					for (var i = 0; i < activexObjects.length; i++) {
+						try {
+							return new ActiveXObject(activexObjects[i]);
+						} catch(e) {}
+					}
+					throw new Error("XMLHttpRequest not supported");
+				} else if (window.XMLHttpRequest) {
+					return new XMLHttpRequest();
+				} else {
+					throw new Error("XMLHttpRequest not supported");
+				}
+			}
+
+			//process the AJAX response from the server when received
+			function processToken(resp, entryType, input) {
+				var token = getData(resp);
+				ccfield.value = getMaskedPan(input, token);
+				maskedPanFromLastToken = ccfield.value;
+				lastToken = token;
+				expiry = isIDTechSREDSwipe(input) ? getExpiryFromSwipe(input) : expiry;
+
+				var response = {};
+				response[tokenPropName] = token;
+				if (expiry !== null) {
+					response["expiry"] = expiry;
+				}
+				if (enhancedResponse) {
+					addEnhancedResponseFieldsToResponseObject(response, token, entryType);
+				}
+				isTokenized = true;
+				window.parent.postMessage(JSON.stringify(response), '*');
+				ccfield.style.borderColor = "";
+				sendCardTyping(false);
+			}
+
+			/**
+			 * Takes the value of the data parameter from a CardSecure response and determines whether
+			 * an error was returned, then populates the given response object with additional fields
+			 * and values.
+			 * @param responseObject object containing fields to be returned in response
+			 * @param responseData value of the data field in the CardSecure tokenization response
+			 * @param entryType - swipe or manual
+			 * @return a response object that includes both the fields in the original responseObject
+			 *		 param passed to the function, as well as additional enhanced fields
+			 */
+			function addEnhancedResponseFieldsToResponseObject(responseObject, responseData, entryType) {
+				var errorResponseDetails = getErrorResponseDetails(responseData);
+				if (errorResponseDetails == null) {
+					responseObject["token"] = responseData;
+					responseObject["errorCode"] = "0";
+					responseObject["errorMessage"] = "";
+				} else {
+					responseObject["token"] = "";
+					responseObject["errorCode"] = errorResponseDetails["errorCode"];
+					responseObject["errorMessage"] = errorResponseDetails["errorMessage"];
+				}
+				responseObject["entry"] = entryType;
+				return responseObject;
+			}
+
+			/**
+			 * Parses the data value from a CardSecure tokenization response to determine if an
+			 * error message was returned. If so, parses out and returns the error code and message.
+			 * @param responseData value of the data field in the CardSecure tokenization response
+			 * @return if responseData contains a CardSecure error message, an object containing the
+			 *		 error code and error message from CardSecure; otherwise, null
+			 */
+			function getErrorResponseDetails(responseData) {
+				responseData = decodeURIComponent(responseData);
+				var regex = /^([0-9]{4})(::)(.*)$/;
+				var matchGroups = regex.exec(responseData);
+				if (matchGroups != null) {
+					return {"errorCode": matchGroups[1], "errorMessage": matchGroups[3].replace(/\+/g, " ")};
+				}
+				return null;
+			}
+
+			// get a masked pan - if it's a swipe, check track data to ensure the masked pan has an accurate length
+			function getMaskedPan(value, token) {
+				var matches, firstTwo, lastFour;
+
+				if (!isSwipe() && value.indexOf("/") === -1) {
+					if (maskFirstTwo) {
+						return "**" + new Array(value.length - 6).join("*") +
+							value.substring(value.length - 4, value.length);
+					} else {
+						return value.substring(0, 2) + new Array(value.length - 6).join("*") +
+							value.substring(value.length - 4, value.length);
+					}
+				
+				// mask bank account number
+				} else if (!isSwipe() && value.indexOf("/") > -1) {
+					var routingNum = value.substring(0, value.indexOf("/"));
+					var acctNum = value.substring(value.indexOf("/") + 1);
+					var maskedAccountNum = acctNum.length > 4 ?
+						new Array(acctNum.length - 3).join("*") + acctNum.substring(acctNum.length - 4) : "****";
+					return routingNum + "/" + maskedAccountNum;
+					
+				//check for track 1
+				} else if (matches = matchT1(value)) {
+					var t1 = matches[1]; //e.g. %*4111********1111^
+					if (maskFirstTwo) {
+						firstTwo = "**";
+					} else {
+						firstTwo = t1.substr(2, 2);
+					}
+					lastFour = t1.substr(t1.length - 5, 4);
+					return firstTwo + new Array(t1.length - 8).join("*") + lastFour;
+					
+				//check for track 2
+				} else if (matches = matchT2(value)) {
+					var t2 = matches[1]; //e.g. ;4111********1111=
+					if (maskFirstTwo) {
+						firstTwo = "**";
+					} else {
+						firstTwo = t2.substr(1, 2);
+					}
+					lastFour = t2.substr(t2.length - 5, 4);
+					return firstTwo + new Array(t2.length - 7).join("*") + lastFour;
+
+				//mask the token, length may be wrong
+				} else {
+					if (maskFirstTwo) {
+						firstTwo = "**";
+					} else {
+						firstTwo = token.substr(1, 2);
+					}
+					lastFour = token.substr(token.length - 4, 4);
+					return firstTwo + new Array(token.length - 7).join("*") + lastFour;
+				}
+			}
+
+			/**
+			 * Attempts to extract expiry from a swipe, checking the track 1 data first, if present, then track 2
+			 * @param swipe
+			 * @returns the numeric expiry if found, otherwise null
+			 */
+			function getExpiryFromSwipe(swipe) {
+				var expiry = null;
+
+				var t1 = matchT1(swipe);
+				if (t1 !== null) {
+					expiry = nullIfUndefined(t1[2]);
+				}
+
+				if (expiry === null) {
+					var t2 = matchT2(swipe);
+					if (t2 !== null) {
+						expiry = nullIfUndefined(t2[2]);
+					}
+				}
+
+				return expiry;
+			}
+
+			function matchT1(str) {
+				return str.match(/(%.[0-9]{2}.{7,13}[0-9]{4}\^).{2,26}\^([0-9]{4})?/);
+			}
+
+			function matchT2(str) {
+				return str.match(/(;[0-9]{2}.{7,13}[0-9]{4}=)([0-9]{4})?/);
+			}
+
+			function nullIfUndefined(input) {
+				return input === undefined ? null : input;
+			}
+
+			/**
+			 * Updates ccfield class based on validity of input
+			 */
+			function onCCNumFieldKeyUp() {
+				var input = formatInput ? ccfield.value.replace(/ /g, '') : ccfield.value;
+
+				if (maskedPanFromLastToken !== null) {
+					if (input !== maskedPanFromLastToken && !isValidLengthAndFormat(input)) {
+						ccfield.className = "error";
+					} else {
+						ccfield.className = "";
+					}
+				} else if (ccfield.className === "error" && isValidLengthAndFormat(input)) {
+					ccfield.className = "";
+				}
+				sendCardTyping(true);
+			}
+
+			// get the "data" parameter value from the CS response
+			function getData(resp) {
+				var obj = JSON.parse(resp);
+				if (obj.hasOwnProperty("token")) {
+					return obj["token"];
+				} else {
+					return "";
+				}
+			}
+
+			/**
+			 * Formats credit card number input in the text box
+			 */
+			function formatCreditCardField(event) {
+				if(event.target.id !== "ccnumfield") {
+					return;
+				}
+
+				var num = ccfield.value[0];
+
+				// try to identify cc num vs. swipe by checking first character
+				if (event.type === "input" && (num === "2" || num === "3" || num === "4" || num === "5" || num === "6")) {
+					var currentCCField = ccfield.value;
+					var number = currentCCField.replace(/ /g, '');
+					var positionBeforeFormat = ccfield.selectionStart;
+					var sizeBeforeFormat = ccfield.value.length;
+					var stringBeforePosition, spacesBeforePosition;
+
+					if (number.length > 1 && number.length <= 19 && isNumeric(number)) {
+						// amex formatting vs. normal formatting
+						var format = number.indexOf("34") === 0 || number.indexOf("37") === 0 ?
+							/(\d{1,4})(\d{1,6})?(\d{1,5})?/ : /(\d{1,4})(\d{1,4})?(\d{1,4})?(\d{1,4})?(\d{1,3})?/;
+
+						var matches = number.match(format);
+
+						if (matches) {
+							matches.shift();
+							ccfield.value = matches.join(' ').trim(); // format the cc number
+
+							// reposition caret if text was not added/removed to/from the end of the string
+							if (positionBeforeFormat !== sizeBeforeFormat) {
+								stringBeforePosition = currentCCField.substring(0, positionBeforeFormat);
+								spacesBeforePosition = 0;
+
+								// if we're going from no formatting to cc num formatting, adjust caret to account for new spaces
+								if (stringBeforePosition.indexOf(' ') === -1) {
+									matches = stringBeforePosition.match(format);
+									if (matches) {
+										matches.shift();
+										spacesBeforePosition = (matches.join(' ').trim().match(/ /g) || []).length;
+									}
+								}
+								setCaretPosition(positionBeforeFormat + spacesBeforePosition);
+							}
+						}
+
+					// if this is a bank account number, remove formatting. min length is 8 for routing num + 1 for the slash
+					} else if (number.length >= 9 && number.length <= 27 && number.indexOf("/") > -1 && ccfield.value.indexOf(' ') > -1) {
+						ccfield.value = number;
+
+						// reposition caret if text was not added/removed to/from the end of the string
+						if (positionBeforeFormat !== sizeBeforeFormat) {
+							stringBeforePosition = currentCCField.substring(0, positionBeforeFormat);
+							spacesBeforePosition = (stringBeforePosition.match(/ /g) || []).length;
+							setCaretPosition(positionBeforeFormat - spacesBeforePosition);
+						}
+					}
+				}
+			}
+
+			/**
+			 * Sets caret position in the text field. used to reset the position after formatting if formatinput is true
+			 * @param caretPos
+			 */
+			function setCaretPosition(caretPos) {
+				if (ccfield.createTextRange) { // handle IE
+					var range = ccfield.createTextRange();
+					range.move('character', caretPos);
+					range.select();
+				} else if (ccfield.selectionStart) { // handle other browsers
+					ccfield.setSelectionRange(caretPos, caretPos);
+				}
+			}
+
+            function scrubInput(input, maxlen, fallback, pattern) {
+                if (input && input.length !== 0 && input.length <= maxlen) {
+                    if(input.match(pattern)){
+                        return input;
+                    }
+                }
+                return fallback;
+            }
+
+			function enforceBoundsOnNumber(number, min, max, fallback) {
+				return (isInt(number) && number >= min && number <= max) ? number : fallback;
+			}
+
+			function isInt(value) {
+				return !isNaN(value) && parseInt(Number(value)) == value && !isNaN(parseInt(value, 10));
+			}
+
+			function onInput(event) {
+				var element = event.target || event.srcElement; // event.srcElement needed for IE support
+				if (isInputDisallowedForElement(element)) {
+					console.log("Ignoring input event for element with ID: " + element.id);
+
+					// prevent unexpected input event triggered by iOS keyboard from changing a select element's value
+					if (isElementOfType(element, "select")) {
+						resetSelectElement(element);
+					}
+					return;
+				}
+
+				if (onInputInactiveId) {
+					clearTimeout(onInputInactiveId);
+				}
+				if (!inputStart) {
+					inputStart = new Date().getTime();
+				}
+				onInputCount++;
+				onInputInactiveId = setTimeout(onInputInactive, inactivityTimeout);
+				if (formatInput) {
+					formatCreditCardField(event);
+				}
+				clearInputs();
+			}
+
+			function onInputInactive() {
+				if (tokenizeWhenInactive) {
+					getToken();
+				} else {
+					// try to detect a swipe
+					var elapsedTime = new Date().getTime() - inputStart;
+					var rate = onInputCount / elapsedTime;
+					if (charactersPerMsThreshold > 0 && rate >= charactersPerMsThreshold) {
+						getToken();
+					} else if (swipeonly) {
+                        document.getElementById("ccnumfield").value = '';
+					}
+				}
+				inputStart = null;
+				onInputCount = 0;
+			}
+
+			function addExpiryField() {
+				var tokenForm = document.getElementById("tokenform");
+				ccexpirymonth = document.getElementById("ccexpiryfieldmonth");
+				ccexpirymonth.title = expirymonthtitle;
+				ccexpirymonth.setAttribute("aria-label", expirymonthtitle);
+				ccexpirymonth.oninput = onInput;
+				ccexpirymonth.setAttribute('type','text');
+				if (placeholderMonth) {
+					ccexpirymonth.placeholder = scrubInput(decodeURIComponent(placeholderMonth), 30, "", /^[0-9a-zA-Z\s.#]+$/);
+				}
+				tokenForm.insertBefore(ccexpirymonth, cccvvfield);
+				if (!tokenizeWhenInactive) {
+					ccexpirymonth.onblur = getToken;
+				}
+				ccexpiryyear = document.getElementById("ccexpiryfieldyear");
+				ccexpiryyear.setAttribute('type','text');
+				ccexpiryyear.title = expiryyeartitle;
+				ccexpiryyear.setAttribute("aria-label", expiryyeartitle);
+				ccexpiryyear.oninput = onInput;
+				if (placeholderYear) {
+					ccexpiryyear.placeholder = scrubInput(decodeURIComponent(placeholderYear), 30, "", /^[0-9a-zA-Z\s.#]+$/);
+				}
+				var labelSlash = document.createElement("label");
+				labelSlash.innerText = "/";
+				labelSlash.setAttribute("for", "ccexpiryfieldyear");
+				if(viewOrientation === "default") {
+					ccexpiryyear.style.marginLeft = (defaultExpiryGap/2 -2)+"px";
+					ccexpirymonth.style.marginRight = (defaultExpiryGap/2 -2)+"px";
+				}
+				if (viewOrientation === "horizontal") {
+					ccexpiryyear.style.marginLeft = (horizontalExpiryGap/2 - 2)+"px";
+					ccexpirymonth.style.marginRight = (horizontalExpiryGap/2 - 2)+"px";
+					if (useCVV) {
+						ccexpiryyear.style.marginRight = horizontalExpiryGap + "px";
+					}
+				}
+				tokenForm.insertBefore(ccexpiryyear, cccvvfield);
+				if (!tokenizeWhenInactive) {
+					ccexpiryyear.onblur = getToken;
+				}
+				var br1 = document.createElement("br");
+				var label2 = document.createElement("label");
+				label2.innerText = decodeURI(expiryLabel);
+				label2.setAttribute("for", "ccexpiryfieldmonth");
+				label2.id = "ccexpirylabel";
+				if (viewOrientation === "horizontal") {
+					label2.style.marginRight = horizontalExpiryGap + "px";
+				}
+				var lbr2 = document.createElement("br");
+				if (viewOrientation !== "custom") {tokenForm.insertBefore(br1, ccexpirymonth);}
+				tokenForm.insertBefore(label2, ccexpirymonth);
+				if (viewOrientation !== "custom") {tokenForm.insertBefore(lbr2, ccexpirymonth);}
+				if (viewOrientation === "vertical") {
+					var vbr = document.createElement("br");
+					tokenForm.insertBefore(vbr, ccexpiryyear);
+				} else  {
+					tokenForm.insertBefore(labelSlash, ccexpiryyear);
+				}
+			}
+
+			function addExpiry() {
+				var tokenForm = document.getElementById("tokenform");
+				ccexpirymonth = document.createElement("select");
+				ccexpirymonth.title = expirymonthtitle;
+				ccexpirymonth.setAttribute("aria-label", expirymonthtitle);
+				ccexpirymonth.id = "ccexpirymonth";
+				allowInputForElement(ccexpirymonth);
+				tokenForm.insertBefore(ccexpirymonth, cccvvfield);
+				var opt = document.createElement("option");
+
+				opt.text = "--";
+				opt.value = "--";
+				ccexpirymonth.add(opt);
+				for (i = 1; i<=12; ++i)
+				{
+					opt = document.createElement("option");
+
+					if (usemonthnames) {
+						opt.text = monthNumberToName(i);
+					}
+					else {
+						if (i < 10) {
+							opt.text = "0" + i;
+						} else {
+							opt.text = i;
+						}
+					}
+					opt.value = i;
+					ccexpirymonth.add(opt);
+				}
+				ccexpiryyear = document.createElement("select");
+				ccexpiryyear.title = expiryyeartitle;
+				ccexpiryyear.setAttribute("aria-label", expiryyeartitle);
+				ccexpiryyear.id = "ccexpiryyear";
+				allowInputForElement(ccexpiryyear);
+				if(viewOrientation === "default") {
+					ccexpiryyear.style.marginLeft = defaultExpiryGap+"px";
+				}
+				if (viewOrientation === "horizontal") {
+					ccexpiryyear.style.marginLeft = horizontalExpiryGap+"px";
+					if (useCVV) {
+						ccexpiryyear.style.marginRight = horizontalExpiryGap+"px";
+					}
+				}
+				tokenForm.insertBefore(ccexpiryyear, cccvvfield);
+				opt = document.createElement("option");
+
+				opt.text = "--";
+				opt.value = "--";
+				ccexpiryyear.add(opt);
+				var currentYear = new Date().getFullYear();
+				for (var year = currentYear; year <= currentYear + expiryYearMaxOffset; year++)
+				{
+					opt = document.createElement("option");
+
+					opt.text = year.toString();
+					opt.value = year.toString();
+					ccexpiryyear.add(opt);
+				}
+				var br1 = document.createElement("br");
+				var label2 = document.createElement("label");
+				label2.innerText = decodeURI(expiryLabel);
+				label2.setAttribute("for", "ccexpirymonth");
+				label2.id = "ccexpirylabel";
+				if (viewOrientation === "horizontal") {
+					label2.style.marginRight = horizontalExpiryGap+"px";
+				}
+				var lbr2 = document.createElement("br");
+				if (viewOrientation !== "custom") {tokenForm.insertBefore(br1, ccexpirymonth);}
+				tokenForm.insertBefore(label2, ccexpirymonth);
+				if (viewOrientation !== "custom") {tokenForm.insertBefore(lbr2, ccexpirymonth);}
+				if (viewOrientation === "vertical") {
+					var vbr = document.createElement("br");
+					tokenForm.insertBefore(vbr, ccexpiryyear);
+				}
+			}
+
+			function addCVV() {
+				var tokenForm = document.getElementById("tokenform");
+				cccvvfield = document.getElementById("cccvvfield");
+				cccvvfield.title = cvvtitle;
+				cccvvfield.setAttribute("aria-label", cvvtitle);
+				cccvvfield.oninput = onInput;
+				cccvvfield.onkeydown = onCvvNumKeyDown;
+				if (placeholderCVV) {
+					cccvvfield.placeholder = scrubInput(decodeURIComponent(placeholderCVV), 30, "", /^[0-9a-zA-Z\s.#]+$/);
+				}
+				cccvvfield.setAttribute('type',fullMobileKeyboard ? 'text' : 'tel');
+				if (!tokenizeWhenInactive) {
+					cccvvfield.onblur = getToken;
+				}
+				var br2 = document.createElement("br");
+				if ((viewOrientation !== "horizontal" || !useExpiry) && viewOrientation !== "custom") {
+					tokenForm.insertBefore(br2, cccvvfield);
+				}
+				var label3 = document.createElement("label");
+				label3.innerText = decodeURI(cvvLabel);
+				label3.setAttribute("for", "cccvvfield");
+				label3.id = "cccvvlabel";
+				if (viewOrientation === "horizontal" && useExpiry) {
+					label3.style.marginRight = cvvGap+"px";
+				}
+				var lbr3 = document.createElement("br");
+				if (viewOrientation === "horizontal" && useExpiry) {
+					//tokenForm.insertNode(label3);
+					tokenForm.insertBefore(label3, ccexpirymonth.previousElementSibling);
+					var rect = cccvvfield.getBoundingClientRect();
+					label3.style.position = "absolute";
+					label3.style.left = ((rect.x))+"px";
+				}
+				else {
+					tokenForm.insertBefore(label3, cccvvfield);
+				}
+				if ((viewOrientation !== "horizontal" || !useExpiry) && viewOrientation !== "custom") {
+					tokenForm.insertBefore(lbr3, cccvvfield);
+				}
+			}
+
+			/** onCardNumKeyDown
+			 * Keys 48-57 are numeric keys on the keyboard
+			 * Keys 46 and 8 are the delete and backspace keys
+			 * Keys 35-40 are the end, home and arrow keys
+			 * Keys 96-105 are numeric keys on the numpad
+			 */
+			function onCardNumKeyDown(event) {
+				var key = event.keyCode || event.charCode;
+				var numericKey = key >= 48 && key <= 57;
+				var deleteKey = key === 46 || key === 8;
+				var shift = !!event.shiftKey;
+				var arrowsAndHomeEnd = key >= 35 && key <= 40;
+				var numpadKeys = key >= 96 && key <= 105;
+				var tabKey = key === 9;
+
+				if ((shift || (!numericKey && !deleteKey && !arrowsAndHomeEnd && !numpadKeys && !tabKey)) && cardNumberNumericOnly) {
+					return false;// Cancel the event
+				}
+			}
+
+			/** onCvvNumKeyDown
+			 * Keys 48-57 are numeric keys on the keyboard
+			 * Keys 46 and 8 are the delete and backspace keys
+			 * Keys 35-40 are the end, home and arrow keys
+			 * Keys 96-105 are numeric keys on the numpad
+			 */
+			function onCvvNumKeyDown(event) {
+				var key = event.keyCode || event.charCode;
+				var numericKey = key >= 48 && key <= 57;
+				var deleteKey = key === 46 || key === 8;
+				var shift = !!event.shiftKey;
+				var arrowsAndHomeEnd = key >= 35 && key <= 40;
+				var numpadKeys = key >= 96 && key <= 105;
+				var tabKey = key === 9;
+
+				if ((shift || (!numericKey && !deleteKey && !arrowsAndHomeEnd && !numpadKeys && !tabKey)) && cvvNumericOnly) {
+					return false;// Cancel the event
+				}
+			}
+
+			function isInputDisallowedForElement(element) {
+				return element.getAttribute("data-disallowinput") === "true";
+			}
+
+			function allowInputForElement(element) {
+				element.setAttribute("data-disallowinput", "false");
+			}
+
+			function disallowInputForElement(element) {
+				element.setAttribute("data-disallowinput", "true");
+			}
+
+			function isElementOfType(element, type) {
+				return element.tagName.toLowerCase() === type;
+			}
+
+			function resetSelectElement(selectElement) {
+				var options = selectElement.options;
+
+				// Look for a default selected option
+				for (var i = 0; i < options.length; i++) {
+					if (options[i].defaultSelected) {
+						selectElement.selectedIndex = i;
+						return;
+					}
+				}
+
+				// If no option is the default, select the first option
+				selectElement.selectedIndex = 0;
+			}
+
+			function addSelectElementEventListeners() {
+				var selectElements = document.getElementsByTagName("select");
+
+				for (var i = 0; i < selectElements.length; i++) {
+					// add focus listener which prevents the element's value from being changed by input events that are
+					// triggered immediately after the element is focused (workaround for iOS keyboard bug, see DT-497)
+					if (selectInputDelay > 0) {
+						selectElements[i].addEventListener("focus", function () {
+							var selectElement = this;
+							disallowInputForElement(selectElement);
+							setTimeout(function () {
+								allowInputForElement(selectElement);
+							}, selectInputDelay); // 100 ms should be sufficient
+						}, false);
+					}
+
+					if (tokenizeWhenInactive) {
+						// explicitly call onInput method when focusout event occurs, since if the iOS keyboard auto-
+						// selected a value on focus, then selecting the same value manually will not trigger an input event
+						selectElements[i].addEventListener("focusout", function (event) {
+							// do not trigger if tokenization already occurred, as that will clear the form elements
+							if (!isTokenized) {
+								onInput(event);
+							}
+						});
+					} else {
+						selectElements[i].addEventListener("blur", getToken);
+					}
+
+					selectElements[i].addEventListener("input", onInput);
+				}
+			}
+
+			function onLoad() {
+				ccfield = document.getElementById("ccnumfield");
+				cccvvfield = document.getElementById("cccvvfield");
+				var input = document.getElementById("ccnumfield");
+				input.size = formatInput ? 24 : 19; // if formatInput, need a larger size to account for spaces
+				input.oninput = onInput;
+				input.onpropertychange = input.oninput; // for IE8
+				input.title = cardtitle;
+				input.setAttribute("aria-label", cardtitle);
+				input.onkeydown = onCardNumKeyDown;
+				input.maxLength = ccnumfieldMaxLength;
+				input.setAttribute("name", cardNumberName);
+				if (!tokenizeWhenInactive) {
+					input.onblur = getToken;
+				}
+				input.onkeyup = onCCNumFieldKeyUp;
+				if (fullMobileKeyboard) {
+					input.type = "text";
+				}
+				if (autoFocus) {
+					input.focus();
+				}
+				if (placeholder) {
+				    input.placeholder = decodeURIComponent(placeholder);
+				}
+				var tokenForm = document.getElementById("tokenform");
+				if (useExpiry) {
+					if (useexpiryfield) {
+						addExpiryField();
+					}
+					else {
+						addExpiry();
+					}
+				}
+				if (useCVV) {
+					addCVV();
+				}
+
+				if (useExpiry || useCVV) {
+					var label1 = document.createElement("label");
+					label1.innerHTML = decodeURI(cardLabel);
+					label1.setAttribute("for", "ccnumfield");
+					label1.id = "cccardlabel";
+					var lbr1 = document.createElement("br");
+					tokenForm.insertBefore(label1, ccfield);
+					if (viewOrientation !== "custom") {tokenForm.insertBefore(lbr1, ccfield);}
+				}
+
+				addSelectElementEventListeners();
+
+				// load jsencript after page has loaded
+				var jsEncryptTag = document.createElement("script");
+				jsEncryptTag.src = "js/jsencrypt.min.js";
+				document.getElementsByTagName("head")[0].appendChild(jsEncryptTag);
+
+			}

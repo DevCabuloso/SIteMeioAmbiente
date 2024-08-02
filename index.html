@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desastres Ambientais</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #3b0f5f;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h2, h4 {
+            margin: 10px 0;
+            color: rgb(255, 255, 255);
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-width: 800px; /* Limita a largura total da container */
+            justify-content: center; /* Centraliza as caixas na página */
+        }
+        
+        .box {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px;
+            width: calc(50% - 40px); /* Ajusta a largura das caixas para caber duas por linha */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-sizing: border-box; /* Inclui padding e border no cálculo da largura */
+            max-width: 360px; /* Largura máxima para as caixas */
+            max-height: 600px; /* Define uma altura máxima para as caixas */
+            overflow-y: auto; /* Adiciona rolagem vertical se o conteúdo exceder a altura */
+        }
+        .location {
+            display: inline-block;
+            background-color: #097231;
+            border: 2px solid #4caf50;
+            border-radius: 10px;
+            padding: 5px 10px;
+            margin-top: 5px;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+        }
+        img {
+            width: 100%; /* Define a largura da imagem para cobrir toda a largura do contêiner */
+            height: 100%; /* Mantém a proporção da imagem */
+            max-width: 2000px; /* Define uma largura máxima para a imagem */
+            max-height: 1000px; /* Define uma altura máxima para a imagem */
+            object-fit: cover; /* Faz com que a imagem cubra a área especificada, cortando o excesso */
+            display: block;
+            margin: 20px auto 40px auto; /* Centraliza a imagem com margem inferior maior */
+        }
+ 
+
+        .sustainable-cities {
+            margin-top: 40px;
+            text-align: center;
+            color: white;
+        }
+        .sustainable-cities h2 {
+            margin-bottom: 20px;
+        }
+        .cities-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .city-box {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 15px;
+            width: 280px; /* Largura dos quadrados das cidades */
+            text-align: center;
+        }
+        .city-box img {
+            max-width: 100%;
+            height: 180px; /* Altura dos quadrados das cidades */
+            object-fit: cover; /* Ajusta a imagem dentro do quadrado */
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .cidades{
+            color: black;
+        }
+        .tituloCoin{
+            color: black;
+        }
+        
+    
+        .localCidade{
+            color: black;
+        }
+        .titulosOtimista{
+            color: #000;
+        }
+        .tituloPecimista{
+            color: #000;
+        }
+        .info-box {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: #000;
+        }
+        /* Estilo geral para a seção */
+.reduzirImpacto {
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.canudo, .carro, .substituirFosseis, .produtosSustentaveis, .outrasAcoes {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 20px;
+    border-bottom: 2px solid #333;
+    padding-bottom: 10px;
+}
+
+.canudo {
+    color: #000000; /* Cor verde */
+}
+.futuros{
+    font-size: 30px;
+}
+.titu{
+    color: #000;
+}
+.reduzirImpacto{
+    color: #000;
+}
+
+.info-box{
+    background-color: #097231;
+}
+
+.carro {
+    color: #000000; /* Cor laranja */
+}
+
+.substituirFosseis {
+    color: #000000; /* Cor azul */
+}
+
+.produtosSustentaveis {
+    color: #000000; /* Cor dourada */
+}
+
+.outrasAcoes {
+    color: #000000; /* Cor azul escuro */
+}
+
+/* Estilo para os parágrafos */
+p {
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 10px 0;
+    text-align: justify;
+}
+        
+    </style>
+</head>
+<body>
+    <h1>Você se importa com o seu planeta?</h1>
+    <img src="imagens/big-header.png" alt="Imagem de Cabeçalho">
+
+    <!-- AMÉRICA DO NORTE -->
+    <h2>AMÉRICA DO NORTE</h2>
+    <div class="container">
+        <div class="box">
+            <h3>Incêndio de Peshtigo (1871, EUA)</h3>
+            <h4 class="location">Cidade de Peshtigo 📍</h4>
+            <p>O Incêndio de Peshtigo ocorreu em outubro de 1871 nos Estados Unidos,
+                especialmente afetando a cidade de Peshtigo, Wisconsin, e áreas circundantes.
+                Foi desencadeado por uma combinação de condições climáticas extremamente 
+                secas, ventos fortes e a prática comum de queimar áreas para limpeza agrícola.
+                Esses elementos criaram um ambiente propício para a propagação rápida do 
+                fogo. O incêndio se espalhou rapidamente por uma vasta área, consumindo florestas,
+                vilas e causando a morte de centenas de pessoas. Foi o maior incêndio florestal
+                registrado na história dos Estados Unidos em termos de área afetada e perdas humanas.</p>
+        </div>
+
+        <div class="box">
+            <h3>Derramamento de Óleo da Deepwater Horizon (2010)</h3>
+            <h4 class="location">Golfo do México 📍</h4>
+            <p>O derramamento de óleo da Deepwater Horizon, em 2010, foi um dos maiores desastres 
+                ambientais dos EUA. Resultou de uma explosão na plataforma de perfuração no Golfo 
+                do México, operada pela BP, que causou o vazamento de cerca de 4,9 milhões de barris
+                de petróleo. O incidente teve graves impactos nos ecossistemas marinhos e comunidades
+                costeiras, levantando preocupações sobre segurança offshore e os efeitos de longo 
+                prazo da indústria de petróleo.</p>
+        </div>
+
+        <div class="box">
+            <h3>Desastre de Love Canal (1970, EUA)</h3>
+            <h4 class="location">Niagara Falls 📍</h4>
+            <p>O desastre de Love Canal envolveu a descoberta de resíduos tóxicos enterrados sob o 
+                bairro de Love Canal, em Niagara Falls, Nova York, causando sérios problemas de saúde
+                para os residentes locais. Este incidente destacou os perigos do descarte inadequado
+                de resíduos industriais e levou a mudanças significativas na legislação ambiental 
+                dos EUA.</p>
+        </div>
+
+        <div class="box">
+            <h3>Derramamento de Óleo do Exxon Valdez (1989)</h3>
+            <h4 class="location">Alasca 📍</h4>
+            <p>O derramamento de óleo do Exxon Valdez ocorreu em 1989, quando o petroleiro Exxon Valdez
+                colidiu com um recife no Golfo do Alasca, resultando no vazamento de cerca de 41 milhões
+                de litros de petróleo. Isso causou danos significativos aos ecossistemas marinhos, afetando 
+                severamente a vida selvagem e as comunidades locais que dependiam dos recursos naturais. 
+                O incidente foi um dos maiores desastres ambientais da história dos Estados Unidos.</p>
+        </div>
+
+        <div class="box">
+            <h3>Tempestade de São Francisco (1906, EUA)</h3>
+            <h4 class="location">São Francisco 📍</h4>
+            <p>A Tempestade de São Francisco de 1906 foi um desastre climático significativo que causou
+                severos danos à cidade de São Francisco, na Califórnia. A tempestade trouxe chuvas intensas
+                e ventos fortes, resultando em inundações e destruição generalizada de propriedades e infraestrutura.</p>
+        </div>
+
+        <div class="box">
+            <h3>Enchentes de Johnstown (1889, EUA)</h3>
+            <h4 class="location">Johnstown 📍</h4>
+            <p>As enchentes de Johnstown ocorreram em 1889, quando uma represa quebrada causou uma
+                devastadora inundação na cidade de Johnstown, Pensilvânia. O desastre resultou na morte
+                de mais de 2.200 pessoas e na destruição de grande parte da cidade.</p>
+        </div>
+
+        <div class="box">
+            <h3>Furacão de Galveston (1900, EUA)</h3>
+            <h4 class="location">Galveston 📍</h4>
+            <p>O Furacão de Galveston de 1900 é considerado o desastre natural mais mortal da história dos
+                Estados Unidos. O furacão causou grandes inundações e destruição na cidade de Galveston, Texas,
+                resultando na morte de aproximadamente 8.000 pessoas.</p>
+        </div>
+
+        <div class="box">
+            <h3>Tempestade de Tulare (1997, EUA)</h3>
+            <h4 class="location">Tulare 📍</h4>
+            <p>A Tempestade de Tulare em 1997 trouxe fortes chuvas e inundações à região de Tulare, na Califórnia.
+                A tempestade causou danos extensivos à infraestrutura e propriedades, bem como a evacuação de
+                milhares de residentes.</p>
+        </div>
+    </div>
+
+    <!-- AMÉRICA DO SUL -->
+    <h2>AMÉRICA DO SUL</h2>
+    <div class="container">
+        <div class="box">
+            <h3>Grande furacão de Santa Catarina (1825)</h3>
+            <h4 class="location">Santa Catarina 📍</h4>
+            <p>O Grande Furacão de Santa Catarina de 1825 foi um dos mais devastadores ciclones tropicais a atingir
+                o sul do Brasil. O furacão causou destruição significativa na região, resultando na perda de muitas
+                vidas e em severos danos às plantações e infraestrutura local.</p>
+        </div>
+
+        <div class="box">
+            <h3>Enchente de 2011 no Rio de Janeiro (2011)</h3>
+            <h4 class="location">Rio de Janeiro 📍</h4>
+            <p>A enchente de 2011 no Rio de Janeiro foi um desastre natural que resultou em deslizamentos de terra e
+                inundações severas na região serrana do estado. Mais de 900 pessoas perderam a vida, e muitas comunidades
+                ficaram isoladas devido aos danos às estradas e pontes.</p>
+        </div>
+
+        <div class="box">
+            <h3>Incêndio Florestal da Amazônia (2019)</h3>
+            <h4 class="location">Amazônia 📍</h4>
+            <p>O Incêndio Florestal da Amazônia em 2019 destacou a vulnerabilidade da maior floresta tropical do mundo
+                a desastres naturais e ações humanas. O incêndio devastou grandes áreas de floresta, gerando preocupação
+                global sobre a conservação ambiental e o impacto das mudanças climáticas.</p>
+        </div>
+
+        <div class="box">
+            <h3>Desastre de Vargas (1999, Venezuela)</h3>
+            <h4 class="location">Vargas 📍</h4>
+            <p>O desastre de Vargas, em 1999, envolveu uma série de deslizamentos de terra e inundações no estado de
+                Vargas, na Venezuela, após chuvas torrenciais. Estima-se que entre 10.000 e 30.000 pessoas perderam a vida,
+                tornando-se um dos piores desastres naturais da história da Venezuela.</p>
+        </div>
+
+        <div class="box">
+            <h3>Erupção do Nevado del Ruiz (1985, Colômbia)</h3>
+            <h4 class="location">Nevado del Ruiz 📍</h4>
+            <p>A erupção do Nevado del Ruiz em 1985 foi um dos desastres vulcânicos mais letais do século XX. A erupção
+                desencadeou fluxos de lama (lahars) que devastaram a cidade de Armero, na Colômbia, resultando na morte
+                de aproximadamente 23.000 pessoas.</p>
+        </div>
+
+        <div class="box">
+            <h3>Desastre de Antofagasta (1877, Chile)</h3>
+            <h4 class="location">Antofagasta 📍</h4>
+            <p>O desastre de Antofagasta em 1877 envolveu um terremoto seguido de um tsunami que atingiu a costa
+                do Chile. A cidade de Antofagasta sofreu danos significativos, e muitas pessoas perderam suas vidas
+                devido ao impacto do tsunami.</p>
+        </div>
+    </div>
+
+    <!-- ÁSIA -->
+    <h2>ÁSIA</h2> 
+    <div class="container"> 
+        <div class="box">
+            <h3>Desastre de Tangshan (1976, China)</h3>
+            <h4 class="location">Tangshan 📍</h4>
+            <p>O desastre de Tangshan em 1976 foi um dos terremotos mais devastadores do século XX. A cidade de Tangshan,
+                na China, foi destruída pelo terremoto, resultando na morte de centenas de milhares de pessoas e deixando
+                muitos outros feridos e desabrigados.</p>
+        </div>
+
+        <div class="box">
+            <h3>Desastre de Bhopa (1984, Índia)</h3>
+            <h4 class="location">Tangshan 📍</h4>
+            <p>O desastre de Bhopal ocorreu em 1984 na cidade de Bhopal, Índia, quando ocorreu um vazamento de gás tóxico
+                na fábrica de pesticidas da Union Carbide. O vazamento de uma substância altamente tóxica, o isocianato de
+                metila, resultou em milhares de mortes imediatas e causou sérios danos à saúde de milhares de pessoas que
+                foram expostas ao gás.</p>
+        </div>
+
+        <div class="box">
+            <h3>A Grande Fome (1876-1878 Índia)</h3>
+            <h4 class="location">Tangshan 📍</h4>
+            <p>A Grande Fome de 1876-1878 na Índia foi causada principalmente por condições climáticas extremas, incluindo
+                uma falha significativa das monções essenciais para a agricultura. A falta de chuvas adequadas resultou em
+                colheitas fracassadas em larga escala, levando à escassez de alimentos e fome generalizada. Outros fatores
+                como práticas agrícolas inadequadas, políticas coloniais que dificultaram a ajuda humanitária e a dependência
+                excessiva de uma única cultura agrícola agravaram a crise, resultando na morte de milhões de pessoas, 
+                tornando-se uma das piores crises de fome da história.</p>
+        </div>
+
+        <div class="box">
+            <h3>Erupção do Monte Tambora (1815, Indonésia)</h3>
+            <h4 class="location">Monte Tambora 📍</h4>
+            <p>A erupção do Monte Tambora em 1815 foi uma das maiores da história, causada pela interação de placas tectônicas
+                na Indonésia. Liberação intensa de magma, cinzas e gases como dióxido de enxofre e dióxido de carbono afetaram
+                o clima global, causando um inverno vulcânico e impactos severos na agricultura e clima ao redor do mundo.
+            </p>
+        </div>
+
+        <div class="box">
+            <h3>Desastre de Minamata (1950-1960, Japão)</h3>
+            <h4 class="location">Minamata 📍</h4>
+            <p>O desastre de Minamata, ocorrido entre 1950 e 1960 no Japão, foi causado pela liberação de mercúrio tóxico na 
+                baía de Minamata por uma fábrica química local. O mercúrio contamina peixes e mariscos consumidos pela população,
+                resultando em milhares de casos de envenenamento por mercúrio, conhecido como doença de Minamata. Os sintomas 
+                incluíam danos neurológicos graves e deficiências físicas. Esse incidente destacou os perigos da poluição industrial
+                e influenciou mudanças significativas na legislação ambiental japonesa.</p>
+        </div>
+
+        <div class="box">
+            <h3>Tsunami do Oceano Índico (2004, Sudeste Asiático)</h3>
+            <h4 class="location">Indonésia 📍</h4>
+            <p>O tsunami do Oceano Índico ocorreu em 26 de dezembro de 2004, desencadeado por um terremoto submarino de magnitude 
+                9,1 a 9,3 na costa de Sumatra, na Indonésia. Este tsunami devastador atingiu várias regiões costeiras ao redor do Oceano
+                Índico, incluindo Indonésia, Sri Lanka, Índia, Tailândia e muitos outros países. Estima-se que mais de 230.000 pessoas
+                tenham perdido suas vidas devido às ondas gigantes que inundaram as áreas costeiras em questão de minutos. O desastre
+                destacou a vulnerabilidade das comunidades costeiras à tsunamis e levou a melhorias significativas nos sistemas de 
+                alerta de tsunami e preparação para desastres na região.
+            </p>
+        </div>
+    </div>
+
+    <div class="sustainable-cities">
+        <h2>Cidades Sustentáveis</h2>
+        <div class="cities-container">
+            <div class="city-box">
+                <h4 class="cidades">Zurique, Suíça</h4>
+                <img src="imagens/Zurique.jpg" alt="Zurique, Suíça">
+                <p class="localCidade">Zurique é uma cidade exemplar em termos de sustentabilidade, com transporte público eficiente, 
+                    gestão de resíduos avançada e forte compromisso com a redução de emissões de carbono.</p>
+            </div>
+            <div class="city-box">
+                <h4 class="cidades">Copenhague, Dinamarca</h4>
+                <img src="imagens/Conpenhage.jfif" alt="Copenhague, Dinamarca">
+                <p class="localCidade">Copenhague é conhecida por sua infraestrutura para bicicletas, energia renovável e planejamento urbano sustentável, 
+                    visando se tornar neutra em carbono até 2025.</p>
+            </div>
+            <div class="city-box">
+                <h4 class="cidades">Vancouver, Canadá</h4>
+                <img src="imagens/vancouver.jfif" alt="Vancouver, Canadá">
+                <p class="localCidade">Vancouver se destaca por sua abordagem verde, incluindo o uso de energia renovável, proteção de espaços verdes e 
+                    iniciativas para reduzir a pegada de carbono da cidade.</p>
+            </div>
+            <div class="city-box">
+                <h4 class="cidades">Reiquiavique, Islândia</h4>
+                <img src="imagens/Reiquiavique.jpg" alt="Reiquiavique, Islândia">
+                <p class="localCidade">Reiquiavique é alimentada principalmente por energia geotérmica e hidrelétrica, tornando-se uma líder em sustentabilidade
+                    energética e conservação ambiental.</p>
+            </div>
+            <div class="city-box">
+                <h4 class="cidades">Melbourne, Austrália</h4>
+                <img src="imagens/Melbore.jfif" alt="Melbourne, Austrália">
+                <p class="localCidade">Melbourne investe em transporte público, áreas verdes e construção sustentável, promovendo uma vida urbana ecologicamente
+                    responsável.</p>
+            </div>
+            <div class="city-box">
+                <h4 class="cidades">Estocolmo, Suécia</h4>
+                <img src="imagens/Estocolmo.jfif" alt="Estocolmo, Suécia">
+                <p class="localCidade">Estocolmo é conhecida por sua limpeza, transporte público eficiente e políticas ambientais avançadas, visando reduzir
+                    as emissões de carbono e promover a sustentabilidade urbana.</p>
+            </div>
+            <div class="city-box">
+                <h4 class="cidades">Portland, EUA</h4>
+                <img src="imagens/Portland.jfif" alt="Portland, EUA">
+                <p class="localCidade">Portland é um modelo de urbanismo sustentável, com políticas que incentivam o uso de bicicletas, transporte público e
+                    práticas de construção verde.</p>
+            </div>
+            <div class="city-box">
+                <h4 class="cidades">Curitiba, Brasil</h4>
+                <img src="imagens/Curitiba.jfif" alt="Curitiba, Brasil">
+                <p class="localCidade">Curitiba é reconhecida por seu planejamento urbano inovador, incluindo um sistema de transporte público eficiente e
+                    programas de reciclagem que promovem a sustentabilidade.</p>
+            </div>
+        </div>
+    </div>
+    <br><br><br>
+    <!-- Texto adicional sobre governos e cultura -->
+    <div class="info-box">
+        <h2 class="tituloCoin">Coincidências entre Cidades Sustentáveis</h2>
+        <p>É interessante observar que as cidades mencionadas por sua sustentabilidade - Zurique, Copenhague,
+            Vancouver, Reiquiavique, Melbourne, Estocolmo, Portland e Curitiba - compartilham uma característica
+            comum: todas possuem governos e culturas que priorizam práticas ecológicas e políticas sustentáveis.
+            Essa coincidência não é meramente circunstancial, mas sim um reflexo de uma visão governamental 
+            proativa e de uma cultura local que valoriza a preservação ambiental, a inovação e o bem-estar social.
+<br><br>
+            Governos locais nestas cidades implementaram políticas que promovem o uso de energias renováveis, a
+            mobilidade sustentável, a gestão eficiente de resíduos e a proteção de espaços verdes. Estas ações 
+            são reforçadas por uma cultura cidadã que apoia e participa ativamente dessas iniciativas. Essa sinergia
+            entre governo e sociedade é fundamental para a construção de um futuro sustentável e próspero.
+<br><br>    
+            No entanto, é alarmante que muitos governos em outras partes do mundo ainda não adotem práticas semelhantes,
+            ignorando a urgência das mudanças climáticas e a necessidade de uma gestão ambiental responsável. Governos
+            que falham em proteger o meio ambiente e não promovem práticas sustentáveis estão, de fato, comprometendo
+            o futuro de seus cidadãos e do planeta.
+<br>br    
+            Diante disso, é crucial que cidadãos de todos os lugares se unam para exigir mudanças. Governos que não 
+            adotam políticas sustentáveis e que desrespeitam os compromissos ambientais globais devem ser responsabilizados
+            e, se necessário, derrubados para dar lugar a líderes que compreendam a gravidade da crise ambiental e 
+            estejam comprometidos com a ação climática e a sustentabilidade. A transição para sociedades sustentáveis
+            não é apenas uma questão de escolha, mas uma necessidade urgente para garantir a sobrevivência e o bem-estar
+            das futuras gerações.</p>
+    </div>
+
+    <h1 class="futuros">Futuro dos Desastres Ambientais e Depredações Humanas</h1>
+    <div class="info-box">
+        <h2 class="titulosOtimista">Futuro Otimista (2030-2200)</h2>
+        <h3>2030-2040: Primeiros Passos para a Sustentabilidade</h3>
+        <p>- Acordos internacionais sólidos para reduzir emissões de carbono e proteger florestas tropicais.</p>
+        <p>- Inovações em energia renovável substituindo combustíveis fósseis.</p>
+        
+        <h3>2040-2060: Expansão Global de Práticas Sustentáveis</h3>
+        <p>- Programas de reflorestamento massivo e restauração de ecossistemas.</p>
+        <p>- Desenvolvimento de cidades inteligentes e sustentáveis.</p>
+        
+        <h3>2060-2100: Sustentabilidade Integrada</h3>
+        <p>- Educação ambiental global integrada ao currículo escolar.</p>
+        <p>- Avanços em tecnologias de captura de carbono e recuperação da biodiversidade.</p>
+        
+        <h3>2100-2200: Uma Nova Era de Harmonia</h3>
+        <p>- Colaboração global fortalecendo a saúde do planeta.</p>
+        <p>- Avanços contínuos em tecnologias para melhorar a qualidade de vida em harmonia com o meio ambiente.</p>
+    </div>
+
+    <!-- FUTURO DISTÓPICO -->
+    <div class="info-box">
+        <h2 class="tituloPecimista">Futuro Distópico (2030-2200)</h2>
+        <h3>2030-2040: Início da Crise Ambiental</h3>
+        <p>- Falha em acordos climáticos e aumento de desastres naturais.</p>
+        <p>- Impactos severos devido ao aumento das temperaturas globais.</p>
+        
+        <h3>2040-2060: A Intensificação dos Problemas</h3>
+        <p>- Migrações em massa devido a áreas costeiras tornadas inabitáveis.</p>
+        <p>- Colapso econômico global devido aos impactos ambientais.</p>
+        
+        <h3>2060-2100: Colapso das Infraestruturas</h3>
+        <p>- Falhas na infraestrutura devido a desastres constantes.</p>
+        <p>- Propagação de doenças e conflitos por recursos escassos.</p>
+        
+        <h3>2100-2200: A Era da Sobrevivência</h3>
+        <p>- Comunidades humanas vivendo em condições extremas e isoladas.</p>
+        <p>- Reconstrução em um ambiente severamente degradado e imprevisível.</p>
+    </div>
+<div class="info-box">
+    <h1 class="reduzirImpacto">PEQUENAS AÇÕES PARA REDUZIR OS IMPACTOS DAS MUDANÇAS CLIMÁTICAS SOBRE A TERRA</h1>
+    <h1 class="canudo">Evitar o uso de canudos e copos descartáveis</h1>
+
+    <p>Os canudos compõem 4% de todo o lixo plástico a nível global e não são biodegradáveis – levam até 1000 anos 
+        para se decompor. Esses utensílios, usados por poucos minutos e produzidos a partir de matéria prima fóssil,
+        poluem os oceanos e se dissolvem em partes menores, terminando na cadeia alimentar dos peixes e causando a 
+        morte de diversas espécies.</p>
+
+    <h1 class="carro">Redução do uso de carro</h1>
+
+    <p>O Dia Mundial sem Carro é celebrado no dia 22 de setembro e visa relembrar a importância de deixar o carro 
+        na garagem sempre que possível, afinal, veículos também emitem gases de efeito estufa e contribuem para o 
+        aquecimento global. A alternativa é utilizar os transportes públicos e ir a pé quando for possível. O uso
+        da bicicleta também é uma excelente opção e bem menos poluente.</p>
+
+    <h1 class="substituirFosseis">Buscar formas alternativas aos combustíveis fósseis</h1>
+
+    <p>Nos automóveis a diesel, por exemplo, o biodiesel é uma ótima alternativa. Nas casas, principalmente em regiões
+        onde a luz do sol é constante, a energia solar pode substituir a eletricidade por meio da instalação de um 
+        sistema simples. De quebra, essa implementação diminuirá o preço das contas da residência.</p>
+
+    <h1 class="produtosSustentaveis">Consumir produtos sustentáveis</h1>
+
+    <p>Muitos cosméticos, alimentos e produtos de higiene têm suas matérias-primas extraídas por meio do desmatamento, 
+        além dos demais processos produtivos também emitem gases tóxicos. Por isso, procurar o histórico das empresas e
+        optar por aquelas que assumem compromisso com o meio ambiente é essencial.</p>
+
+    <h1 class="outrasAcoes">Outras ações</h1>
+
+    <p>Desligue aparelhos e lâmpadas que não estão sendo usados. Dê preferência ao uso de fontes de energia limpa e 
+        renovável, como a energia solar, a energia eólica (dos ventos) e a biomassa. Reduz o consumo de combustíveis 
+        fósseis e seus derivados, como o petróleo e a gasolina. Procure deixar o carro em casa e fazer o reaproveitamento
+        da água para lavar o quintal. Pequenas atitudes diárias fazem toda a diferença</p>
+    </div>
+
+    <!-- Seção de Desastres Ambientais -->
+    <div class="info-box">
+        <h2 class="titu">Realidade dos Desastres Naturais e Depredações Humanas</h2>
+        <h3>Impactos Imediatos e a Longo Prazo</h3>
+        <p><strong>Impactos Imediatos:</strong></p>
+        <p><strong>Desastres Naturais:</strong> Esses eventos, como terremotos, furacões e inundações, causam danos
+            imediatos significativos. As consequências podem incluir a destruição de infraestrutura, perda de vidas,
+            e deslocamento forçado de comunidades. Por exemplo, um terremoto pode derrubar edifícios e interromper 
+            serviços essenciais como água e eletricidade.</p>
+        <p><strong>Depredações Humanas:</strong> A exploração excessiva dos recursos naturais, como o desmatamento e a
+             poluição, pode causar efeitos imediatos, como a perda de biodiversidade e a degradação do solo. Atividades
+            como a mineração também podem resultar em poluição de águas e solos.</p>
+<br>
+        <p><strong>Impactos a Longo Prazo:</strong></p>
+        <p><strong>Desastres Naturais:</strong> Os impactos a longo prazo podem incluir a recuperação econômica, a 
+            reabilitação de áreas afetadas e a reconstrução de infraestrutura. Desastres também podem resultar em mudanças
+            permanentes no ambiente, como a alteração de ecossistemas ou a erosão do solo.</p>
+        <p><strong>Depredações Humanas:</strong> Os efeitos prolongados incluem mudanças climáticas, perda de habitats e
+            a extinção de espécies. A degradação ambiental pode levar a crises hídricas e problemas de saúde a longo prazo
+            para as populações afetadas.</p>
+<br>
+        <h3>Comparação de Impactos Econômicos, Sociais e Ambientais</h3>
+        <p><strong>Econômicos:</strong> Desastres naturais podem causar grandes prejuízos econômicos devido à destruição de
+            propriedades e interrupção das atividades econômicas. A recuperação pode ser lenta e cara. Por outro lado, a
+            depredação ambiental pode reduzir a capacidade produtiva de terras e recursos, afetando a economia de longo 
+            prazo ao diminuir a oferta de produtos naturais e aumentar os custos de mitigação.</p>
+        <p><strong>Sociais:</strong> Ambos os eventos podem ter efeitos profundos nas comunidades. Desastres naturais 
+            frequentemente resultam em perda de vidas e deslocamento de pessoas, enquanto a depredação ambiental pode 
+            causar problemas de saúde e segurança para as comunidades afetadas, como aumento de doenças respiratórias 
+            devido à poluição.</p>
+        <p><strong>Ambientais:</strong> Os desastres naturais podem causar danos temporários ao meio ambiente, mas muitas
+            vezes o ambiente se recupera. Em contraste, a depredação ambiental tende a ter impactos mais duradouros, como
+            a perda de biodiversidade e a degradação de ecossistemas.</p>
+<br>
+        <h3>Projetos de Mitigação e Recuperação</h3>
+        <p><strong>Exemplos de Projetos Bem-Sucedidos:</strong></p>
+        <p><strong>Recuperação após Desastres:</strong> Projetos como a reconstrução após o terremoto de Haiti de 2010 e 
+            o Tsunami de 2004 no Sudeste Asiático demonstram a importância de uma resposta coordenada. Essas iniciativas
+            envolveram a reconstrução de infraestrutura, assistência humanitária e programas de apoio a longo prazo para
+            as comunidades afetadas.</p>
+        <p><strong>Mitigação Ambiental:</strong> Projetos como a restauração de áreas desmatadas na Amazônia e a criação 
+            de zonas de proteção ao redor de parques nacionais têm sido bem-sucedidos em recuperar habitats e promover a 
+            biodiversidade.</p>
+<br>
+        <h3>Ações Humanas e suas Consequências</h3>
+        <p><strong>Investigação sobre a Relação entre Atividades Humanas e Desastres Naturais:</strong></p>
+        <p><strong>Mudanças Climáticas:</strong> Atividades como a queima de combustíveis fósseis e a desflorestação contribuem
+            para o aquecimento global, que pode intensificar desastres naturais, como furacões e secas.</p>
+        <p><strong>Uso do Solo:</strong> A urbanização desordenada e a expansão agrícola podem aumentar a vulnerabilidade 
+            a desastres naturais, como enchentes e deslizamentos de terra.</p>
+<br>
+        <h3>Indiferença Humana</h3>
+        <p><strong>Casos de Falta de Ação Significativa:</strong></p>
+        <p><strong>Mudanças Climáticas:</strong> Em muitos casos, a falta de ação significativa para reduzir as emissões 
+            de gases de efeito estufa e implementar políticas ambientais sustentáveis mostra uma indiferença em relação 
+            aos impactos futuros.</p>
+        <p><strong>Desastres Ambientais Locais:</strong> Em situações onde comunidades são afetadas por poluição ou degradação
+            ambiental, a resposta pode ser lenta ou inadequada, evidenciando uma falta de prioridade para esses problemas.</p>
+
+        <h3>Reflexões Finais</h3>
+        <p><strong>A Importância da Ação Proativa:</strong> A ação proativa na mitigação de desastres naturais e na proteção
+            do meio ambiente é crucial para garantir um futuro sustentável. Investir em soluções e estratégias para enfrentar
+            os desafios ambientais pode reduzir os impactos e promover a resiliência das comunidades e ecossistemas.</p>
+    </div>
+</body>
+</html>

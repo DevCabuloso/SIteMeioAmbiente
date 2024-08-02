@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vídeos</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background: url('imagens/1566Nightstarrysky1_generated.jpg') no-repeat center center;
+            background-size: cover; /* Ajusta a imagem para cobrir todo o fundo */
+            position: relative;
+        }
+        .bosqueFundo {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%; /* Ajuste a largura conforme necessário */
+            height: 1500px; /* Ajuste a altura conforme necessário */
+            z-index: 1; /* Garante que a imagem esteja sobre o fundo */
+        }
+        .videoContainer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 3500px; /* Ajuste a largura conforme necessário */
+            height: 2000px; /* Ajuste a altura conforme necessário */
+            background-color: black;
+            z-index: 3; /* Garante que o quadrado esteja sobre a imagem do bosque */
+        }
+    </style>
+</head>
+<body>
+    <img class="bosqueFundo" src="imagens/shadow-hills.png" alt="Bosque">
+    <div class="videoContainer">
+        <!-- Você pode adicionar um elemento de vídeo aqui -->
+        <!-- <video controls width="100%" height="100%">
+            <source src="caminho/do/seu/video.mp4" type="video/mp4">
+            Seu navegador não suporta a tag de vídeo.
+        </video> -->
+    </div>
+</body>
+</html>
