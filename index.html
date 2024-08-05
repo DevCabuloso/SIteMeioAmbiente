@@ -5,176 +5,165 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Desastres Ambientais</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #3b0f5f;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        h2, h4 {
-            margin: 10px 0;
-            color: rgb(255, 255, 255);
-        }
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            max-width: 800px; /* Limita a largura total da container */
-            justify-content: center; /* Centraliza as caixas na página */
-        }
-        
-        .box {
-            background-color: #ffffff;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 15px;
-            width: calc(50% - 40px); /* Ajusta a largura das caixas para caber duas por linha */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            box-sizing: border-box; /* Inclui padding e border no cálculo da largura */
-            max-width: 360px; /* Largura máxima para as caixas */
-            max-height: 600px; /* Define uma altura máxima para as caixas */
-            overflow-y: auto; /* Adiciona rolagem vertical se o conteúdo exceder a altura */
-        }
-        .location {
-            display: inline-block;
-            background-color: #097231;
-            border: 2px solid #4caf50;
-            border-radius: 10px;
-            padding: 5px 10px;
-            margin-top: 5px;
-        }
-        h1 {
-            color: white;
-            text-align: center;
-        }
-        img {
-            width: 100%; /* Define a largura da imagem para cobrir toda a largura do contêiner */
-            height: 100%; /* Mantém a proporção da imagem */
-            max-width: 2000px; /* Define uma largura máxima para a imagem */
-            max-height: 1000px; /* Define uma altura máxima para a imagem */
-            object-fit: cover; /* Faz com que a imagem cubra a área especificada, cortando o excesso */
-            display: block;
-            margin: 20px auto 40px auto; /* Centraliza a imagem com margem inferior maior */
-        }
- 
+       body {
+    font-family: Arial, sans-serif;
+    background-color: #3b0f5f;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-        .sustainable-cities {
-            margin-top: 40px;
-            text-align: center;
-            color: white;
-        }
-        .sustainable-cities h2 {
-            margin-bottom: 20px;
-        }
-        .cities-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-        }
-        .city-box {
-            background-color: #ffffff;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            padding: 15px;
-            width: 280px; /* Largura dos quadrados das cidades */
-            text-align: center;
-        }
-        .city-box img {
-            max-width: 100%;
-            height: 180px; /* Altura dos quadrados das cidades */
-            object-fit: cover; /* Ajusta a imagem dentro do quadrado */
-            border-radius: 10px;
-            margin-bottom: 10px;
-        }
-        .cidades{
-            color: black;
-        }
-        .tituloCoin{
-            color: black;
-        }
-        
-    
-        .localCidade{
-            color: black;
-        }
-        .titulosOtimista{
-            color: #000;
-        }
-        .tituloPecimista{
-            color: #000;
-        }
-        .info-box {
-            background-color: #ffffff;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 40px;
-            max-width: 800px;
-            width: 100%;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            color: #000;
-        }
-        /* Estilo geral para a seção */
+h1, h2, h4 {
+    color: white;
+    text-align: center;
+    margin: 10px 0;
+}
+
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    max-width: 800px;
+    justify-content: center;
+}
+
+.box {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 15px;
+    width: calc(50% - 40px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+    max-width: 360px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.location {
+    display: inline-block;
+    background-color: #097231;
+    border: 2px solid #4caf50;
+    border-radius: 10px;
+    padding: 5px 10px;
+    margin-top: 5px;
+    color: white;
+}
+
+img {
+    width: 100%;
+    height: auto;
+    max-width: 2000px;
+    max-height: 1000px;
+    object-fit: cover;
+    display: block;
+    margin: 20px auto 40px auto;
+}
+
+.sustainable-cities {
+    margin-top: 40px;
+    text-align: center;
+    color: white;
+}
+
+.sustainable-cities h2 {
+    margin-bottom: 20px;
+}
+
+.cities-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.city-box {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 15px;
+    width: 280px;
+    text-align: center;
+}
+
+.city-box img {
+    max-width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.cidades, .tituloCoin, .localCidade, .titulosOtimista, .tituloPecimista, .titu, .reduzirImpacto {
+    color: black;
+}
+
+.info-box {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 40px;
+    max-width: 800px;
+    width: 100%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    color: #000;
+}
+
 .reduzirImpacto {
-    font-size: 24px;
+    font-size: 1.5em;
     font-weight: bold;
     text-align: center;
     margin: 20px 0;
 }
 
 .canudo, .carro, .substituirFosseis, .produtosSustentaveis, .outrasAcoes {
-    font-size: 20px;
+    font-size: 1.25em;
     font-weight: bold;
     margin-top: 20px;
     border-bottom: 2px solid #333;
     padding-bottom: 10px;
 }
 
-.canudo {
-    color: #000000; /* Cor verde */
-}
-.futuros{
-    font-size: 30px;
-}
-.titu{
-    color: #000;
-}
-.reduzirImpacto{
-    color: #000;
-}
-
-.info-box{
-    background-color: #097231;
-}
-
-.carro {
-    color: #000000; /* Cor laranja */
-}
-
-.substituirFosseis {
-    color: #000000; /* Cor azul */
-}
-
-.produtosSustentaveis {
-    color: #000000; /* Cor dourada */
-}
-
-.outrasAcoes {
-    color: #000000; /* Cor azul escuro */
-}
-
-/* Estilo para os parágrafos */
 p {
-    font-size: 16px;
+    font-size: 1em;
     line-height: 1.6;
     margin: 10px 0;
     text-align: justify;
 }
+
+.futuros {
+    font-size: 1.875em;
+}
+
+@media (max-width: 768px) {
+    .box, .city-box {
+        width: calc(100% - 40px);
+    }
+    
+    .container, .cities-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    img {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .reduzirImpacto, .canudo, .carro, .substituirFosseis, .produtosSustentaveis, .outrasAcoes {
+        font-size: 1.125em;
+    }
+    
+    p {
+        font-size: 0.875em;
+    }
+}
+
         
     </style>
 </head>
